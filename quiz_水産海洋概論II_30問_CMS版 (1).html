@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>水産海洋概論II 一問一答（30問テスト）｜編集機能付き</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --text:#f8fafc; --muted:#94a3b8; --accent:#38bdf8; --ok:#22c55e; --ng:#ef4444; --warn:#f59e0b; }
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(120deg,#0f172a,#0b1022);color:var(--text);font-family:"Noto Sans JP", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;}
+    .wrap{max-width:1024px;margin:0 auto;padding:24px}
+    .card{background:var(--card);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:24px}
+    h1{font-size:1.6rem;margin:0 0 8px}
+    h2{font-size:1.25rem;margin:12px 0}
+    .sub{color:var(--muted);margin-bottom:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    button{cursor:pointer;border:none;border-radius:12px;padding:10px 14px;font-size:1rem}
+    .primary{background:var(--accent);color:#00111a}
+    .ghost{background:transparent;color:var(--text);border:1px solid #374151}
+    .ok{background:var(--ok)}
+    .ng{background:var(--ng)}
+    .warn{background:var(--warn)}
+    .qno{font-weight:700;color:var(--accent)}
+    .progress{height:10px;background:#1f2937;border-radius:999px;overflow:hidden;margin:12px 0}
+    .bar{height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%}
+    .options{display:grid;gap:10px;margin:12px 0}
+    .opt{background:#0b1220;border:1px solid #223; border-radius:12px;padding:12px}
+    .opt input{transform:scale(1.25);margin-right:10px}
+    .explain{background:#0a0f1a;border-left:4px solid var(--accent);padding:12px;margin-top:12px;border-radius:8px}
+    .muted{color:var(--muted)}
+    .footer{margin-top:18px;color:#9ca3af;font-size:.9rem}
+    .small{font-size:.95rem}
+
+    /* Editor UI */
+    .editor{display:grid;grid-template-columns:280px 1fr;gap:16px}
+    .list{background:#0a1324;border:1px solid #1f2a3a;border-radius:12px;overflow:auto;max-height:420px}
+    .list-item{padding:10px 12px;border-bottom:1px solid #1f2a3a;cursor:pointer}
+    .list-item.active{background:#071020;border-left:4px solid var(--accent)}
+    .form{background:#0a1324;border:1px solid #1f2a3a;border-radius:12px;padding:12px}
+    .form label{display:block;margin:8px 0 4px;color:#cbd5e1}
+    .form input[type=text], .form textarea, .form select{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:var(--text)}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .help{background:#081021;border-left:4px solid #60a5fa;padding:10px;border-radius:8px;color:#cbd5e1}
+    .tag{display:inline-block;background:#0b1b2e;border:1px solid #234; padding:2px 8px;border-radius:999px;font-size:.8rem;color:#a6b2c6;margin-right:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>水産海洋概論II 一問一答（30問テスト）<span class="tag">編集機能付き</span></h1>
+      <div class="sub">ブラウザ上で問題文・選択肢・正解を編集／JSONとして保存・読み込みできます。30問解き終えたら自動終了します。</div>
+
+      <!-- START SCREEN -->
+      <div id="screen-start">
+        <div class="row">
+          <button class="primary" id="btnStart">テストを開始（30問）</button>
+          <button class="ghost" id="btnToggleExplain">解説：<span id="toggleState">表示</span></button>
+          <button class="ghost" id="btnShuffle">選択肢の並び：ランダム</button>
+          <button class="ghost" id="btnEditor">編集モードへ</button>
+        </div>
+        <div class="help" style="margin-top:12px">
+          <strong>使い方：</strong>テストは常に<strong>30問</strong>出題されます（問題数が30未満の場合は全問）。編集内容は同一セッション内で履歴に残り、JSONでエクスポート／インポート可能です。
+        </div>
+        <div class="footer small">出題データ出典：『水産海洋概論Ⅱ 水産化学分野 到達度評価【2024年度 模範解答・解説】』（提供PDF）</div>
+      </div>
+
+      <!-- QUIZ SCREEN -->
+      <div id="screen-quiz" style="display:none">
+        <div class="row"><button class="ghost" id="btnBackHome">← ホームへ</button></div>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+        <div><span class="qno" id="qno">1/30</span>　<span id="qtitle"></span></div>
+        <div class="options" id="opts"></div>
+        <div id="result"></div>
+        <div class="row">
+          <button class="primary" id="btnAnswer">回答する</button>
+          <button class="ghost" id="btnNext" disabled>次の問題へ</button>
+        </div>
+      </div>
+
+      <!-- END SCREEN -->
+      <div id="screen-end" style="display:none">
+        <div class="row"><button class="ghost" id="btnBackHome2">← ホームへ</button></div>
+        <h2>テスト終了</h2>
+        <p class="small">30問すべて回答しました。正解・不正解にかかわらずここで終了です。</p>
+        <p id="summary"></p>
+        <div class="row">
+          <button class="primary" id="btnRestart">新しいテストを始める</button>
+        </div>
+      </div>
+
+      <!-- EDITOR SCREEN -->
+      <div id="screen-editor" style="display:none">
+        <div class="row" style="justify-content:space-between">
+          <div class="row">
+            <button class="ghost" id="btnBackHome3">← ホームへ</button>
+            <button class="primary" id="btnPreviewQuiz">この内容でテスト開始（30問）</button>
+          </div>
+          <div class="row">
+            <button class="ghost" id="btnUndo" title="履歴を戻す">履歴：戻る</button>
+            <button class="ghost" id="btnRedo" title="履歴を進める">履歴：やり直し</button>
+            <button class="ghost" id="btnExport">JSONをエクスポート</button>
+            <label class="ghost" style="display:inline-flex;align-items:center;gap:8px">JSONをインポート<input type="file" id="fileImport" accept="application/json" style="display:none"></label>
+          </div>
+        </div>
+
+        <div class="editor" style="margin-top:12px">
+          <div>
+            <h2>問題一覧</h2>
+            <div class="row">
+              <button class="ghost" id="btnAdd">新規作成</button>
+              <button class="ghost" id="btnDelete">削除</button>
+              <button class="ghost" id="btnMoveUp">上へ</button>
+              <button class="ghost" id="btnMoveDown">下へ</button>
+            </div>
+            <div class="list" id="qList"></div>
+          </div>
+          <div>
+            <h2>編集フォーム</h2>
+            <div class="form">
+              <label>問題文</label>
+              <input type="text" id="fTitle" placeholder="例：問1. ○○について正しいものを選べ。">
+              <div class="grid-2">
+                <div>
+                  <label>選択肢A</label><input type="text" id="fA">
+                </div>
+                <div>
+                  <label>選択肢B</label><input type="text" id="fB">
+                </div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label>選択肢C</label><input type="text" id="fC">
+                </div>
+                <div>
+                  <label>選択肢D</label><input type="text" id="fD">
+                </div>
+              </div>
+              <div>
+                <label>選択肢E</label><input type="text" id="fE">
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label>正解（A～E）</label>
+                  <select id="fCorrect">
+                    <option value="0">A</option>
+                    <option value="1">B</option>
+                    <option value="2">C</option>
+                    <option value="3">D</option>
+                    <option value="4">E</option>
+                  </select>
+                </div>
+                <div>
+                  <label>解説（任意）</label>
+                  <input type="text" id="fExplain" placeholder="解説を短文で">
+                </div>
+              </div>
+              <div class="row" style="margin-top:8px">
+                <button class="primary" id="btnApply">変更を反映</button>
+                <button class="ghost" id="btnResetForm">フォームを元に戻す</button>
+              </div>
+            </div>
+            <div class="help" style="margin-top:10px">
+              <strong>編集ガイド：</strong>
+              <ul>
+                <li>選択肢は<strong>5つ（A～E）</strong>固定です。正解はA=0, B=1, C=2, D=3, E=4で設定します。</li>
+                <li>テストの出題数は常に<strong>30問</strong>です。問題数が30以上ある場合は<strong>ランダムで30問</strong>が出題されます。</li>
+                <li>編集履歴は同一セッション内で保持します（ページを閉じるとリセット）。必要に応じてJSONへエクスポートしてください。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">© 2025｜クイズ作成：M365 Copilot｜資料出典：『水産海洋概論Ⅱ』模範解答・解説（2024）</div>
+    </div>
+  </div>
+
+<script>
+// ===== 設定 =====
+let SHOW_EXPLAIN = true;    // 解説表示
+let SHUFFLE_OPTIONS = true; // 選択肢ランダム
+const QUIZ_COUNT = 30;      // 1回のテストで出題する問題数（常に30問）
+
+// ===== 初期データ（提供PDFに基づく） =====
+let QUESTIONS = [
+  {title: '問1. 魚介類の筋肉に関する次の記述の中から、正しいものを1つ選べ。',
+   choices: ['タコの仲間にも、斜紋筋と呼ばれる構造をもつ筋肉がある。', '同じ魚体で比べると、血合肉は普通肉に比べて嫌気的な領域である。', '魚肉は畜肉よりも結合組織に富んでいるために、煮ると煮こごりができやすい。', '赤身魚の肉の色は、白身魚よりもヘモグロビン含量が多いことに起因する。', 'パラミオシンは、ある種の無脊椎動物の筋形質タンパク質である。'],
+   correct: 0,
+   explain: '血合肉は好気的、魚肉の結合組織は少ない、赤身の色はミオグロビン、パラミオシンは筋原線維タンパク質。'},
+  {title: '問2. 高度不飽和脂肪酸DHAの略記を1つ選べ。',
+   choices: ['C20:3 n-6','C26:3 n-3','C20:6 n-3','C22:3 n-6','C22:6 n-3'],
+   correct: 4,
+   explain: 'DHAはC22:6 n-3。'},
+  {title: '問3. 寒天について正しく述べられているものを1つ選べ。',
+   choices: ['冷やして固めた寒天を50℃に温めると溶解する。','ゼラチンよりも保水性が低い。','ヒトの消化酵素で容易に分解される。','主成分はアガロペクチンである。','工業的には褐藻類を原料として生産されている。'],
+   correct: 1,
+   explain: '寒天は80℃程度でないと溶けず、ヒトの消化酵素では分解されない。主成分はアガロースで、原料は紅藻類。'},
+  {title: '問4. イミダゾールジペプチドに関する正しい記述を1つ選べ。',
+   choices: ['筋肉中の活性酸素含量を増加させる作用がある。','ヒスチジンおよびその誘導体と、α-アラニンが結合したジペプチドである。','マグロ類のような回遊魚には、血合肉よりも普通肉に多く含まれている。','サメ類の筋肉中にはヒスチジンが少ないので、イミダゾールジペプチドも含まれない。','ナガスクジラ類の筋肉中で最も多いイミダゾール化合物はアンセリンである。'],
+   correct: 2,
+   explain: '抗酸化作用で活性酸素を減少。構成はヒスチジン系＋β-アラニン。サメでも種類により含有（例：ネズミザメ）。ナガスクジラではバレニンが多い。'},
+  {title: '問5. オスモライトとして作用するとみなされている物質を1つ選べ。',
+   choices: ['アスタキサンチン','ナイアシン','5’-イノシン酸ナトリウム','タウリン','トリメチルアミン'],
+   correct: 3,
+   explain: 'タウリンはオスモライト。TMAOはオスモライトだがTMAは違う。'},
+  {title: '問6. 魚の鮮度判定に関する次の文章のうち、誤っているものはどれか。',
+   choices: ['腹の張りがなく、頭を持つと尾が垂れ下がる魚は、解硬後の魚である。','死直後の魚の鰓が鮮紅色を呈するのはヘモグロビンが酸素と結合しているためである。','眼球の白濁があるものは鮮度低下していると判定できる。','海産魚の腐敗臭の主体はジメチルアミン、トリメチルアミンである。','魚の皮膚の色調は色素胞の収縮・伸展により変化する。'],
+   correct: 2,
+   explain: '眼球の白濁は鮮度判定に直結しない。鮮紅色はヘモグロビンの酸素結合、腐敗臭はTMA等。'},
+  {title: '問7. 鮮度判定方法の記述（ア～オ）に当てはまる語の組合せとして適切なものを選びなさい。        　科学的な鮮度判定方法の原理は、物理学的方法、化学的方法、微生物学的方法に分けられる。こ のうち、微生物学的方法は、（ア）の測定や危害微生物を（イ）と呼ばれる方法で検出する。水産 食品の危害微生物の例として、（ウ）、サルモネラ、黄色ブドウ球菌、ボツリヌス菌、ヒスタミン 生成菌、（エ）などが挙げられ、最近では、（オ）を用いて迅速に結果を出すことができる。',
+   choices: ['ア:生菌数 イ:培養法 ウ:腸炎ビブリオ エ:ノロウイルス オ:遺伝子同定法','ア:生菌数 イ:培養法 ウ:大腸菌群 エ:コロナウイルス オ:蛍光光度法','ア:死菌数 イ:培養法 ウ:腸炎ビブリオ エ:ノロウイルス オ:吸光光度法','ア:生菌数 イ:フィルター法 ウ:納豆菌 エ:ロタウイルス オ:遺伝子同定法','ア:静菌数 イ:培養法 ウ:腸炎ビブリオ エ:ノロウイルス オ:吸光光度法'],
+   correct: 0,
+   explain: '微生物学的方法は生菌数の測定や培養法。水産食品の危害微生物として腸炎ビブリオやノロウイルス。近年は遺伝子同定法も。'},
+  {title: '問8. 鮮度低下指標の説明のうち正しいものを選びなさい。',
+   choices: ['K値はタンパク質分解の度合いを表す。','TMAは全ての魚介類の初期腐敗指標である。','L値は脂質酸化の度合いを示す。','TMAはTMAOより生成され、微生物は関与しない。','K値はATPの分解の度合いを表す。'],
+   correct: 4,
+   explain: 'K値はATP関連化合物の分解度を示す。TMAは一部魚介類で増えるが初期指標とは限らない。'},
+  {title: '問9. 魚介類の鮮度低下に関する記述（ア～オ）の組合せとして適切なものを選びなさい。 魚介類は死後の鮮度低下が速いため、その品質において鮮度は特に重要な要素である。魚の死後 変化は一般に、硬直、(ア)、軟化、(イ)という順に進行し、その過程は劣化要因の面から、魚介類 自身が持っている筋肉や内臓の(ウ)の働きによる変化と、魚に付着している(エ)の作用による変化 の二つに分けることができる。前者は(オ)のよさに関係し、後者は(イ)に関係するものである。し たがって鮮度低下の問題は、この両者を区別して論ずる必要がある。',
+   choices: ['解体／腐敗／自己消化／水分／活き','解硬／腐敗／自己合成／細菌／味','解体／還元／自己酸化／水分／味','解硬／腐敗／自己消化／細菌／活き','解硬／還元／自己消化／塩分／活き'],
+   correct: 3,
+   explain: '死後変化は硬直→解硬→軟化→腐敗。自己消化と付着細菌の作用に分け、前者は活きの良さ、後者は腐敗に関係。'},
+  {title: '問10. 鮮度管理方法の記述（ア～オ）の組合せとして適切なものを選びなさい。  生鮮魚介類では（ア）の魚体は生食用として市場価格が高い。そこで死後硬直の（イ）を遅らせ、 硬直の持続時間をより長くする方法が模索されている。漁獲後に（ウ）を行い魚体の疲労を回復 させてから活け締めする方法、活け締め後に（エ）の温度で冷却・貯蔵する方法、また効率的か つ均一な活け締めと（オ）のための自動装置を用いる方法などが知られている。',
+   choices: ['死後硬直前から／死後硬直中／開始時間／蓄養／20℃付近／脱血','解硬後／終了時間／蓄養／0℃付近／血止め','死後硬直後から／軟化中／開始時間／給餌／0℃付近／脱血','死後硬直前から／死後硬直中／開始時間／蓄養／5～10℃付近／脱血','死後硬直前から／死後硬直中／開始時間／給餌／5～10℃付近／血止め'],
+   correct: 3,
+   explain: '蓄養で疲労回復→活け締め→5～10℃付近で冷却・貯蔵、効率的な脱血が重要。'},
+  {title: '問11. 魚肉の筋肉構造（ア～エ）に当てはまる語句の組合せとして正しいものを選びなさい。  一般に、哺乳類と比べ魚類の筋線維は（ ア ）、（ イ ）。魚類の筋肉は普通筋と血合筋が明確に分 けられているが、哺乳類では普通筋と血合筋にそれぞれ対応する（ ウ ）および（ エ ）がモザ イク状に混在している。',
+   choices: ['太く／長い／遅筋／速筋','太く／短い／速筋／遅筋','細く／長い／遅筋／速筋','細く／短い／速筋／遅筋','硬く／脆い／筋束／腱'],
+   correct: 1,
+   explain: '魚類の筋線維は哺乳類に比べて太く・短い。普通筋に対応する速筋と血合筋に対応する遅筋が哺乳類ではモザイク状に混在。'},
+  {title: '問12. 魚介類の主な成分について誤っているものを1つ選びなさい。',
+   choices: ['水分は魚肉の大部分を占め、平均すると畜肉よりやや多い。','脂質は主として皮下脂肪であり、皮下組織や内臓組織に分布している。','タンパク質は水分を除いた主成分で、多数のアミノ酸からなる。','魚介類のタンパク質は必須アミノ酸を含み栄養価が高い。','一般に魚油は陸上動物油に比べ、酸化しやすい。'],
+   correct: 1,
+   explain: '魚類の脂質は皮下だけでなく筋肉や肝臓などに多く、主として中性脂肪。'},
+  {title: '問13. 魚介類のうま味成分に関する記述のうち、誤っているものを1つ選びなさい。',
+   choices: ['かつお節の主要なうま味成分はイノシン酸。','エキスは英語Extractが語源で、抽出物の意。','含窒素成分と無窒素成分の2群に大別される。','無脊椎動物の味の主要成分はアミノ酸。','魚類のエキス成分は赤身魚に比べて白身魚の方で多い。'],
+   correct: 4,
+   explain: '魚類では一般に赤身魚の方がエキス成分量が多い。'},
+  {title: '問14. 海産魚が鮮度低下した時に発生する生ぐさ臭の原因物質を1つ選びなさい。',
+   choices: ['ヒスタミン','トリメチルアミン','バニリン','インドール','ノネナール'],
+   correct: 1,
+   explain: '生ぐさ臭の主因はトリメチルアミン（TMA）。'},
+  {title: '問15. ナマコの毒成分で水虫薬になった化合物を1つ選びなさい。',
+   choices: ['DHA','コラーゲン','テトロドトキシン','ネライストキシン','ホロトキシン（サポニン）'],
+   correct: 4,
+   explain: 'ホロトキシン（サポニン）が医薬・生化学試薬として応用。'},
+  {title: '問16. 「HACCPの考え方を取り入れた衛生管理」の対象となる小規模な営業者等とは？（食品製造者）',
+   choices: ['10人未満','15人未満','30人未満','50人未満','80人未満'],
+   correct: 3,
+   explain: '食品等の取り扱い従事者が50人未満の事業場。'},
+  {title: '問17. HACCPに関する説明として、最も適切でないものはどれか。',
+   choices: ['CCP（重要管理点）を定める','最終製品の官能検査より効果的に不良出荷を未然防止できる','1960年代に米国で宇宙食の安全確保のために開発','各工程で危害要因を分析・予測','重要管理点を連続監視・記録し、異常時に是正措置'],
+   correct: 1,
+   explain: 'HACCPは工程管理であり、抜取検査（官能検査）と比較される。'},
+  {title: '問18. HACCP7原則の手順どおりの並びはどれか。   (A) 重要管理点の決定 (B) 改善措置の設定 (C) 危害要因の分析 (D)モニタリング方法の設定 (E) 記録の作成 (F) 検証方法の設定 (G) 管理基準の設定 ',
+   choices: ['C→A→D→G→B→E→F','C→G→A→D→F→B→E','C→A→G→D→B→F→E','C→G→A→D→B→F→E','C→A→G→D→F→E→B'],
+   correct: 4,
+   explain: '危害要因分析→管理基準→重要管理点→モニタリング→検証→記録→改善措置。'},
+  {title: '問19. 現在有効な食品衛生法の改正が完全施行されたのはいつか。',
+   choices: ['2015年','2018年','2020年','2021年','2023年'],
+   correct: 3,
+   explain: '食品衛生法改正の完全施行は2021年。'},
+  {title: '問20. 「HACCPに沿った衛生管理」に関する説明として、最も適切ではないものはどれか。',
+   choices: ['水産業の採取業者は業界団体の手引書を参考に簡略化でよい','大規模事業者はコーデックスHACCP7原則に基づく取組が求められる','熱処理工程が重要管理点（CCP）とされることが多い','すべての食品等事業者に原則義務化されたが、影響が少ない営業者は計画・手順書の作成は不要','手引書には計画例、管理基準、記録様式等が記載されている'],
+   correct: 0,
+   explain: '水産の採取業者はHACCPに沿った衛生管理の対象外。'},
+  {title: '問21. 養殖ヒラメの筋肉（刺身）で一過性の嘔吐・下痢を起こす粘液胞子虫はどれか。',
+   choices: ['アニサキス・シンプレックス','日本海裂頭条虫','旋尾線虫','クドア・セプテンプンクタータ','顎口虫'],
+   correct: 3,
+   explain: 'クドア・セプテンプンクタータは粘液胞子虫で養殖ヒラメの筋肉に寄生。'},
+  {title: '問22. 二枚貝の生食で感染し、症状消失後も1週間〜1か月程度便中から検出される病原微生物は？',
+   choices: ['カンピロバクター','腸管出血性大腸菌','ノロウイルス','黄色ブドウ球菌','腸炎ビブリオ'],
+   correct: 2,
+   explain: 'ノロウイルスは二枚貝で問題となり、長期間便中に排出される。'},
+  {title: '問23. ヒスタミンによるアレルギー様食中毒に関して正しいものはどれか。',
+   choices: ['食物アレルギーの一種である','魚が生合成する酵素作用で生成する','原因魚種は白身魚である','生成すると外観や臭いで容易に気付ける','一旦生成したヒスタミンは加熱では分解されない'],
+   correct: 4,
+   explain: '免疫機序を介さないためアレルギーではない。生成は付着菌の酵素作用。原因は赤身魚。外観や臭いからは分かりにくい。'},
+  {title: '問24. フグ毒に関する正しい記述はどれか。',
+   choices: ['本体はマイトトキシンでK+チャネルに作用','本体はテトロドトキシンでCa2+チャネルに作用','本体はテトロドトキシンでNa+チャネルに作用','本体はパリトキシンでNa+チャネルに作用','本体はテトラミンでCa2+チャネルに作用'],
+   correct: 2,
+   explain: 'フグ毒の本体はテトロドトキシン（TTX）。電位依存性Na+チャネルを遮断する神経毒。'},
+  {title: '問25. 熱帯〜亜熱帯のサンゴ礁海域の魚類摂食で起こる致死率の低い食中毒の総称は？',
+   choices: ['シガトキシン','パリトキシン様中毒','シガテラ','パリトキシン中毒','アニサキス食中毒'],
+   correct: 2,
+   explain: '総称はシガテラ。シガトキシンは毒素名。'},
+  {title: '問26. 日本のマグロ漁業の発達に関する記述のうち、最も不適切なものはどれか。',
+   choices: ['冷凍機の低温化技術開発を促進した','コールドチェーン整備前はあまり盛んでは無かった','魚肉の色をきれいに保つ技術が重要だった','第2次世界大戦後の復興に貢献した','大型船が建造できるようになって発達した'],
+   correct: 1,
+   explain: '整備前から船上で缶詰にして輸出する事業が盛んだった。'},
+  {title: '問27. コールドチェーンに関する記述のうち最も不適切なものはどれか。',
+   choices: ['常に低温を保ちながら食品を輸送・貯蔵する仕組み','国際的な食品流通を普及させた要因','冷凍食品のために発達した流通システムである','冷凍機は重要な役割を担う','最初にアメリカで発達し世界に広まった'],
+   correct: 2,
+   explain: '青果・鮮魚・乳など冷蔵食品の流通のために発達。'},
+  {title: '問28. 食品の冷凍保存とは呼べない温度帯を全て含むものはどれか。',
+   choices: ['5～0℃','0～-15℃','-15～-18℃','-18～-40℃','-40℃以下'],
+   correct: 1,
+   explain: '冷凍保存は衛生法では-15℃以下、CODEXでは-18℃以下。したがって5～0℃と0～-15℃は含まれない。'},
+  {title: '問29. 水産物を冷凍保存することの長所と短所の記述のうち、最も不適切なものはどれか。',
+   choices: ['保存料無しで長期保存ができる','低温だけで微生物を死滅させられる','タンパク質変性による食味・食感の変化を最低限に抑制できる','活魚輸送より低負荷で高鮮度輸送が可能','保存中は常に低温を保つ必要があるのが短所'],
+   correct: 1,
+   explain: '冷凍中は微生物増殖が止まるが死滅はしない。温度を上げれば増殖再開。'},
+  {title: '問30. 冷媒に関する記述のうち最も不適切なものはどれか。',
+   choices: ['フロンは元々地球上に存在しなかった物質である','冷媒特性の違いは冷凍機性能に影響する','フロンは環境影響を除けば非常に優れた冷媒である','フロンはどれもオゾン層を破壊する','アンモニアや二酸化炭素を冷媒とする冷凍機がある'],
+   correct: 3,
+   explain: 'HFC（ハイドロフルオロカーボン）はオゾン層を破壊しない。'}
+];
+
+// ===== ユーティリティ =====
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()* (i+1)); [arr[i],arr[j]]=[arr[j],arr[i]] } return arr }
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+function toast(msg){ alert(msg); }
+
+// ===== クイズ制御 =====
+let order = []; let step = 0; let score = 0; let chosen = null;
+function buildOrder(){ const idxs = [...Array(QUESTIONS.length).keys()]; shuffle(idxs); return idxs.slice(0, Math.min(QUIZ_COUNT, idxs.length)); }
+function startQuiz(){ order = buildOrder(); step = 0; score = 0; chosen = null; showScreen('quiz'); renderQ(); }
+function renderQ(){ const idx = order[step]; const q = QUESTIONS[idx]; document.getElementById('qno').textContent = `${step+1}/${Math.min(QUIZ_COUNT, order.length)}`; document.getElementById('qtitle').textContent = q.title; const optsEl = document.getElementById('opts'); optsEl.innerHTML=''; document.getElementById('result').innerHTML=''; document.getElementById('btnNext').disabled = true; document.getElementById('btnAnswer').disabled = false; chosen = null; let optIdxs = [...q.choices.keys()]; if(SHUFFLE_OPTIONS){ optIdxs = shuffle(optIdxs); }
+ optIdxs.forEach((oi,k)=>{ const d=document.createElement('label'); d.className='opt'; const id=`opt_${k}`; d.innerHTML = `<input type="radio" name="opt" id="${id}" value="${oi}"> ${q.choices[oi]}`; d.addEventListener('change',()=>{ chosen = oi; }); optsEl.appendChild(d); }); const bar = document.getElementById('bar'); const pct = (step/order.length)*100; bar.style.width = `${Math.round(pct)}%`; }
+function answer(){ if(chosen===null){ toast('選択肢を選んでください'); return; } const idx = order[step]; const q = QUESTIONS[idx]; const ok = (chosen===q.correct); const resEl = document.getElementById('result'); if(ok){ score++; resEl.innerHTML = `<div class="ok" style="padding:12px;border-radius:12px">✅ 正解！</div>`; } else { resEl.innerHTML = `<div class="ng" style="padding:12px;border-radius:12px">❌ 不正解。正解は <strong>${['A','B','C','D','E'][q.correct]}</strong>：${q.choices[q.correct]}</div>`; }
+ if(SHOW_EXPLAIN && q.explain){ const ex = document.createElement('div'); ex.className='explain'; ex.innerHTML = `<strong>解説：</strong>${q.explain}`; resEl.appendChild(ex); }
+ document.getElementById('btnAnswer').disabled = true; document.getElementById('btnNext').disabled = false; }
+function next(){ step++; if(step>=order.length || step>=QUIZ_COUNT){ endQuiz(); return; } renderQ(); }
+function endQuiz(){ showScreen('end'); document.getElementById('summary').textContent = `正解数：${score} / ${Math.min(QUIZ_COUNT, order.length)}　（正解率：${Math.round(score/Math.min(QUIZ_COUNT, order.length)*100)}%）`; document.getElementById('bar').style.width = '100%'; }
+
+// ===== 画面切替 =====
+function showScreen(name){ document.getElementById('screen-start').style.display = (name==='start')?'block':'none'; document.getElementById('screen-quiz').style.display = (name==='quiz')?'block':'none'; document.getElementById('screen-end').style.display = (name==='end')?'block':'none'; document.getElementById('screen-editor').style.display = (name==='editor')?'block':'none'; }
+
+// ===== 編集機能（簡易CMS） =====
+let selIndex = 0; // 現在選択中の問題番号
+const undoStack = []; const redoStack = [];
+function pushHistory(){ undoStack.push(deepClone(QUESTIONS)); redoStack.length = 0; sessionStorage.setItem('quiz_history_last', JSON.stringify(QUESTIONS)); }
+function undo(){ if(undoStack.length===0){ toast('これ以上戻れません'); return; } redoStack.push(deepClone(QUESTIONS)); QUESTIONS = undoStack.pop(); refreshList(); fillForm(selIndex); }
+function redo(){ if(redoStack.length===0){ toast('やり直しできません'); return; } undoStack.push(deepClone(QUESTIONS)); QUESTIONS = redoStack.pop(); refreshList(); fillForm(selIndex); }
+
+function toJSON(){ return JSON.stringify({ questions: QUESTIONS, meta: { exportedAt: new Date().toISOString(), count: QUESTIONS.length } }, null, 2); }
+function downloadJSON(){ const blob = new Blob([toJSON()], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quiz_questions.json'; a.click(); URL.revokeObjectURL(a.href); }
+function importJSON(file){ const reader = new FileReader(); reader.onload = (e)=>{ try{ const obj = JSON.parse(e.target.result); if(!obj || !Array.isArray(obj.questions)){ throw new Error('questionsが配列ではありません'); }
+ QUESTIONS = obj.questions.map(q=>({ title: q.title||'', choices: (q.choices||[]).slice(0,5).concat(Array(5).fill('')).slice(0,5), correct: Math.min(4, Math.max(0, (typeof q.correct==='number'? q.correct:0))), explain: q.explain||'' })); pushHistory(); refreshList(); selIndex=0; fillForm(selIndex); toast('JSONを読み込みました'); }catch(err){ toast('JSONの読み込みに失敗：'+err.message); } };
+ reader.readAsText(file); }
+
+function refreshList(){ const list = document.getElementById('qList'); list.innerHTML=''; QUESTIONS.forEach((q,i)=>{ const div = document.createElement('div'); div.className = 'list-item' + (i===selIndex? ' active':''); div.textContent = `${i+1}. ${q.title}`; div.addEventListener('click',()=>{ selIndex=i; refreshList(); fillForm(i); }); list.appendChild(div); }); }
+function fillForm(i){ const q = QUESTIONS[i]||{title:'',choices:['','','','',''],correct:0,explain:''}; document.getElementById('fTitle').value = q.title; document.getElementById('fA').value = q.choices[0]||''; document.getElementById('fB').value = q.choices[1]||''; document.getElementById('fC').value = q.choices[2]||''; document.getElementById('fD').value = q.choices[3]||''; document.getElementById('fE').value = q.choices[4]||''; document.getElementById('fCorrect').value = String(q.correct||0); document.getElementById('fExplain').value = q.explain||''; }
+function applyForm(){ const t = document.getElementById('fTitle').value.trim(); const A = document.getElementById('fA').value.trim(); const B = document.getElementById('fB').value.trim(); const C = document.getElementById('fC').value.trim(); const D = document.getElementById('fD').value.trim(); const E = document.getElementById('fE').value.trim(); const corr = parseInt(document.getElementById('fCorrect').value,10); const ex = document.getElementById('fExplain').value.trim(); if(!t){ toast('問題文を入力してください'); return; } const choices = [A,B,C,D,E]; if(choices.some(c=>!c)){ toast('選択肢A～Eをすべて入力してください'); return; } if(!(corr>=0 && corr<=4)){ toast('正解はA～Eから選択してください'); return; }
+ QUESTIONS[selIndex] = { title:t, choices, correct:corr, explain:ex }; pushHistory(); refreshList(); fillForm(selIndex); toast('変更を反映しました'); }
+function addQuestion(){ const q = { title:'（新しい問題のタイトルを入力）', choices:['選択肢A','選択肢B','選択肢C','選択肢D','選択肢E'], correct:0, explain:'' }; QUESTIONS.push(q); selIndex = QUESTIONS.length-1; pushHistory(); refreshList(); fillForm(selIndex); }
+function deleteQuestion(){ if(QUESTIONS.length<=1){ toast('最低1問は必要です'); return; } QUESTIONS.splice(selIndex,1); selIndex = Math.max(0, selIndex-1); pushHistory(); refreshList(); fillForm(selIndex); }
+function moveUp(){ if(selIndex<=0){ return; } const tmp = QUESTIONS[selIndex]; QUESTIONS[selIndex] = QUESTIONS[selIndex-1]; QUESTIONS[selIndex-1] = tmp; selIndex--; pushHistory(); refreshList(); fillForm(selIndex); }
+function moveDown(){ if(selIndex>=QUESTIONS.length-1){ return; } const tmp = QUESTIONS[selIndex]; QUESTIONS[selIndex] = QUESTIONS[selIndex+1]; QUESTIONS[selIndex+1] = tmp; selIndex++; pushHistory(); refreshList(); fillForm(selIndex); }
+function resetForm(){ fillForm(selIndex); }
+
+// ===== イベント配線 =====
+document.getElementById('btnStart').addEventListener('click', startQuiz);
+document.getElementById('btnRestart').addEventListener('click', ()=> showScreen('start'));
+document.getElementById('btnBackHome').addEventListener('click', ()=> showScreen('start'));
+document.getElementById('btnBackHome2').addEventListener('click', ()=> showScreen('start'));
+document.getElementById('btnBackHome3').addEventListener('click', ()=> showScreen('start'));
+document.getElementById('btnEditor').addEventListener('click', ()=>{ showScreen('editor'); refreshList(); fillForm(selIndex); });
+document.getElementById('btnPreviewQuiz').addEventListener('click', startQuiz);
+document.getElementById('btnToggleExplain').addEventListener('click', ()=>{ SHOW_EXPLAIN = !SHOW_EXPLAIN; document.getElementById('toggleState').textContent = SHOW_EXPLAIN? '表示':'非表示'; });
+document.getElementById('btnShuffle').addEventListener('click', ()=>{ SHUFFLE_OPTIONS = !SHUFFLE_OPTIONS; document.getElementById('btnShuffle').textContent = '選択肢の並び：' + (SHUFFLE_OPTIONS? 'ランダム':'固定'); });
+document.getElementById('btnAnswer').addEventListener('click', answer);
+document.getElementById('btnNext').addEventListener('click', next);
+// Editor
+ document.getElementById('btnApply').addEventListener('click', applyForm);
+ document.getElementById('btnAdd').addEventListener('click', addQuestion);
+ document.getElementById('btnDelete').addEventListener('click', deleteQuestion);
+ document.getElementById('btnMoveUp').addEventListener('click', moveUp);
+ document.getElementById('btnMoveDown').addEventListener('click', moveDown);
+ document.getElementById('btnResetForm').addEventListener('click', resetForm);
+ document.getElementById('btnExport').addEventListener('click', downloadJSON);
+ const fileImport = document.getElementById('fileImport'); fileImport.addEventListener('change', (e)=>{ if(e.target.files && e.target.files[0]) importJSON(e.target.files[0]); });
+ document.getElementById('btnUndo').addEventListener('click', undo);
+ document.getElementById('btnRedo').addEventListener('click', redo);
+
+// 初期履歴（同一セッション保持）
+pushHistory();
+showScreen('start');
+</script>
+</body>
+</html>
